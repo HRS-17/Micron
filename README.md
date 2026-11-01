@@ -111,13 +111,31 @@ prefetching.
 
 ![Level 2](figures/level2_cache_sweep.png)
 
-_Notes to be added once the sweep finishes._
+Without prefetching, once the cache is at least 2-way, making it bigger or more
+associative barely helps: from 4 KB to
+64 KB the LLM hit rate stays near 30% and CNN near 51%, because almost every miss is
+a first touch of streamed data, not a capacity or conflict miss. The recommender
+improves only slowly with size (hot embedding rows). Tree-PLRU matches true LRU on
+all three workloads and random replacement is clearly worse. So the cache is kept
+small and cheap (16 KB, 4-way, tree-PLRU), and the prefetcher does the real work.
 
 ### Level 5: sensitivity
 
 ![Sweeps](figures/level5_sweeps.png)
 
-_Notes to be added once the sweeps finish._
+- **DRAM latency.** TAPS's lead grows as DRAM gets slower: on LLM decode it goes
+  from 2.07x vs 1.73x at 16 cycles to 4.92x vs 3.45x at 128 cycles.
+- **Compute between requests.** The less compute there is to hide latency behind,
+  the more an accurate prefetcher matters: with 2 cycles between requests TAPS
+  reaches 4.66x on LLM vs 3.01x for the baselines.
+- **Degree.** Speedup saturates at 4 lines ahead for every prefetcher, which is why
+  4 is the default. Beyond that, next-line only adds traffic (20,621 DRAM reads on
+  LLM at degree 8, vs 8,424 for TAPS).
+- **DRAM bandwidth.** Varying the DRAM issue rate from 1 to 8 cycles per request
+  changed almost nothing (`results/sweep_bandwidth.csv`): with at most one demand
+  every 9 cycles this model never becomes bandwidth-bound. TAPS's lower DRAM
+  traffic would matter more in a multi-core or wider-issue setup; that is not
+  modelled here.
 
 ## Findings worth noting
 
@@ -176,7 +194,7 @@ Useful extensions:
 ```bash
 make quick     # traces, main RTL run of all 6 configs, golden check  (~1 min)
 make plots     # regenerate figures/ from results/
-make           # everything, including all sweeps                    (20+ min)
+make           # everything, including all sweeps                    (~15 min)
 ```
 
 `make quick` should print `MATCH` three times and write `results/rtl_results.csv`.
