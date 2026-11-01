@@ -104,14 +104,6 @@ The traces are generated from the loop nests of three kernels (fp16 everywhere):
 
 ![Level 1](figures/level1_trace_analysis.png)
 
-### Level 2: cache organisation
-
-`scripts/ref_model.py` sweeps size, associativity and replacement policy without
-prefetching.
-
-![Level 2](figures/level2_cache_sweep.png)
-
-_Notes to be added once the sweep finishes._
 
 ### Level 5: sensitivity
 
