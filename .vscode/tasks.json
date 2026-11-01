@@ -1,0 +1,8 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    { "label": "TAPS quick run", "type": "shell", "command": "make quick",
+      "group": { "kind": "build", "isDefault": true } },
+    { "label": "TAPS full run (sweeps + figures)", "type": "shell", "command": "make" }
+  ]
+}
