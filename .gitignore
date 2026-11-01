@@ -1,0 +1,6 @@
+build/
+*.vcd
+*.vvp
+*.part
+__pycache__/
+.DS_Store
