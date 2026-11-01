@@ -105,11 +105,7 @@ The traces are generated from the loop nests of three kernels (fp16 everywhere):
 ![Level 1](figures/level1_trace_analysis.png)
 
 
-### Level 5: sensitivity
-
-![Sweeps](figures/level5_sweeps.png)
-
-_Notes to be added once the sweeps finish._
+._
 
 ## Findings worth noting
 
