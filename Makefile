@@ -10,10 +10,10 @@ quick:          ## traces, main RTL run, golden check
 plots:
 	python3 scripts/plots.py
 
-wave:           ## VCD of the CNN trace at default settings
+wave:           ## VCD of the recommender trace (smallest)
 	mkdir -p build
 	iverilog -g2012 -o build/sim_wave tb/tb_mem.v rtl/*.v
-	vvp -n build/sim_wave +trace=traces/trace_cnn.hex +name=cnn +csv=build/wave.csv +dump
+	vvp -n build/sim_wave +trace=traces/trace_rec.hex +name=rec +csv=build/wave.csv +dump
 
 clean:
 	rm -rf build waveform.vcd

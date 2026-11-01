@@ -140,25 +140,110 @@ _Notes to be added once the sweeps finish._
   Python reference model exactly on every trace.
 - The testbench checks that each configuration counted every request.
 
-## Running it
+## Running it (VS Code + Icarus Verilog)
 
-Needs Icarus Verilog (`iverilog`, `vvp`) and Python 3 with numpy and matplotlib.
+### 1. Install the tools
 
-```
-make quick    # traces, main run, golden check   (~1 min)
-make          # + all sweeps and figures          (~15 min)
-make wave     # VCD of the CNN run
-```
+macOS:
 
-Single run with your own settings:
-
-```
-iverilog -g2012 -Ptb_mem.DRAM_LAT=64 -o build/sim tb/tb_mem.v rtl/*.v
-vvp -n build/sim +trace=traces/trace_llm.hex +name=llm +csv=out.csv
+```bash
+brew install icarus-verilog                 # iverilog + vvp
+python3 -m pip install numpy matplotlib     # traces and plots
+xcode-select --install                      # provides `make`, if missing
 ```
 
-Testbench configurations: 0 no prefetch, 1 next-line, 2 stride, 3 stride +
-anti-pollution, 4 TAPS, 5 TAPS + anti-pollution.
+Windows: install Icarus Verilog from bleyer.org/icarus (tick "add to PATH"), then
+`pip install numpy matplotlib`. There is no `make`, so use the commands in step 4.
+
+Linux: `sudo apt install iverilog` and `pip install numpy matplotlib`.
+
+Check with `iverilog -V`.
+
+### 2. Open the project in VS Code
+
+```bash
+git clone https://github.com/HRS-17/Micron.git
+cd Micron
+code .
+```
+
+Useful extensions:
+- **Verilog-HDL/SystemVerilog/Bluespec SystemVerilog** (mshr-h): highlighting and iverilog linting
+- **Surfer** or **WaveTrace**: view `.vcd` waveforms inside VS Code
+
+### 3. Run everything (integrated terminal, Ctrl + `)
+
+```bash
+make quick     # traces, main RTL run of all 6 configs, golden check  (~1 min)
+make plots     # regenerate figures/ from results/
+make           # everything, including all sweeps                    (20+ min)
+```
+
+`make quick` should print `MATCH` three times and write `results/rtl_results.csv`.
+
+### 4. Run one simulation by hand (any OS)
+
+```bash
+python3 gen_traces.py                         # writes traces/*.hex
+mkdir -p build results
+iverilog -g2012 -o build/sim tb/tb_mem.v rtl/cache_ctrl.v rtl/prefetch_engine.v rtl/mem_subsystem.v
+vvp -n build/sim +trace=traces/trace_llm.hex +name=llm +csv=results/my_run.csv
+```
+
+It prints one line per configuration and appends the same numbers to the CSV:
+
+| cfg | prefetcher |
+|---|---|
+| 0 | none |
+| 1 | next-line |
+| 2 | stride |
+| 3 | stride + anti-pollution |
+| 4 | TAPS |
+| 5 | TAPS + anti-pollution |
+
+Use `trace_cnn.hex` / `trace_rec.hex` (with `+name=cnn` / `+name=rec`) for the
+other workloads.
+
+To change parameters, add `-P` flags when compiling:
+
+```bash
+iverilog -g2012 -Ptb_mem.DRAM_LAT=64 -Ptb_mem.DEGREE=8 -o build/sim tb/tb_mem.v rtl/*.v
+```
+
+| Parameter | Default | Meaning |
+|---|---|---|
+| `DRAM_LAT` | 32 | DRAM latency in cycles |
+| `GAP` | 8 | compute cycles between memory requests |
+| `DEGREE` | 4 | how many lines a stream may run ahead |
+| `ISSUE_GAP` | 2 | cycles between DRAM requests (bandwidth) |
+
+### 5. Waveforms
+
+```bash
+vvp -n build/sim +trace=traces/trace_rec.hex +name=rec +csv=build/w.csv +dump
+```
+
+This writes `waveform.vcd` (`make wave` does the same). Open it with Surfer or
+WaveTrace in VS Code, or with GTKWave. The recommender trace is the shortest;
+the other traces give much larger files. Good signals to start with:
+
+- `tb_mem.cfg[4].dut.u_pf.e_c1`, `e_cw`, `e_pos`, `e_run`: TAPS learning each stream
+- `tb_mem.cfg[4].dut.u_cache.pf_req_valid`, `pf_req_ready`: prefetch issue
+- `tb_mem.cfg[4].resp_ready`, `resp_hit`: demand responses
+
+### 6. Optional: one-click run
+
+The repo already includes `.vscode/tasks.json`. Use Terminal → Run Build Task (Ctrl/Cmd + Shift + B):
+
+```json
+{
+  "version": "2.0.0",
+  "tasks": [
+    { "label": "TAPS quick run", "type": "shell", "command": "make quick",
+      "group": { "kind": "build", "isDefault": true } }
+  ]
+}
+```
 
 ## Limitations
 
