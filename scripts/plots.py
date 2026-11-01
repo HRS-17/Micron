@@ -177,7 +177,7 @@ def level5():
 
 def sweeps():
     specs = [("sweep_latency.csv", "dram_lat", "DRAM latency (cycles)"),
-             ("sweep_bandwidth.csv", "issue_gap", "cycles between DRAM requests (less bandwidth ->)"),
+             ("sweep_gap.csv", "gap", "compute cycles between memory requests"),
              ("sweep_degree.csv", "degree", "prefetch degree (lines ahead)")]
     fig, axes = plt.subplots(3, 3, figsize=(15, 11))
     for i, (fname, key, xl) in enumerate(specs):
@@ -189,11 +189,8 @@ def sweeps():
                 name, col = SERIES[c]
                 ys = [get(rows, w, 0, "cycles", **{key: x}) / get(rows, w, c, "cycles", **{key: x}) for x in xs]
                 ax.plot(xs, ys, marker="o", lw=2, ms=6, color=col, label=name)
-                ax.annotate(name, (xs[-1], ys[-1]), xytext=(6, 0), textcoords="offset points",
-                            va="center", fontsize=8, color=INK2)
             ax.axhline(1, color=INK2, lw=1)
             ax.set_xticks(xs)
-            ax.set_xlim(xs[0] - 0.05 * (xs[-1] - xs[0]), xs[-1] + 0.22 * (xs[-1] - xs[0]))
             ax.set_xlabel(xl)
             ax.set_ylabel("speedup over no prefetch")
             if i == 0:
