@@ -111,10 +111,11 @@ prefetching.
 
 ![Level 2](figures/level2_cache_sweep.png)
 
-Without prefetching, once the cache is at least 2-way, making it bigger or more
-associative barely helps: from 4 KB to
-64 KB the LLM hit rate stays near 30% and CNN near 51%, because almost every miss is
-a first touch of streamed data, not a capacity or conflict miss. The recommender
+Without prefetching, once the cache is 4-way or more, making it bigger barely helps:
+from 4 KB to 64 KB the LLM hit rate stays near 30% and CNN near 51%, because almost
+every miss is a first touch of streamed data, not a capacity or conflict miss.
+Direct-mapped and 2-way caches lose a lot at small sizes (conflicts between the
+interleaved tensors). The recommender
 improves only slowly with size (hot embedding rows). Tree-PLRU matches true LRU on
 all three workloads and random replacement is clearly worse. So the cache is kept
 small and cheap (16 KB, 4-way, tree-PLRU), and the prefetcher does the real work.
